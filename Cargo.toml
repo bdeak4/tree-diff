@@ -1,5 +1,5 @@
 [package]
-name = "mtdiff"
+name = "tdiff"
 version = "0.1.0"
 edition = "2021"
 
