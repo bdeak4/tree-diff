@@ -24,5 +24,7 @@ fn get_hash(filename: String) {
     let bytes_written = io::copy(&mut file, &mut hasher).unwrap();
     let hash_bytes = hasher.finalize();
 
+    // show only first 7 chars of hash
+
     println!("hash is: {:x}", hash_bytes);
 }
