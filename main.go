@@ -11,38 +11,25 @@ import (
 
 const HASH_PRINT_LEN = 7
 
-type TreeNode struct {
+type TreeEntry struct {
 	Name     string
 	Hash     string
 	Size     int64
-	Children []TreeNode
+	Children []TreeEntry
 }
 
-//func Compare(src, dst string) (bool, []string, error) {
-//	var diffPaths []string
-//
-//	if _, err := os.Stat(src); err != nil {
-//		return false, diff, err
-//	}
-//	if _, err := os.Stat(dst); err != nil {
-//		return false, diff, err
-//	}
-//
-//	entries, err := os.ReadDir(path)
-//}
-
-func BuildTree(path string) (TreeNode, error) {
+func BuildTree(path string) (TreeEntry, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
-		return TreeNode{}, err
+		return TreeEntry{}, err
 	}
 
 	if !stat.IsDir() {
 		hash, err := ComputeHash(path)
 		if err != nil {
-			return TreeNode{}, err
+			return TreeEntry{}, err
 		}
-		return TreeNode{
+		return TreeEntry{
 			Name: stat.Name(),
 			Size: stat.Size(),
 			Hash: hash,
@@ -51,23 +38,23 @@ func BuildTree(path string) (TreeNode, error) {
 
 	entries, err := os.ReadDir(path)
 	if err != nil {
-		return TreeNode{}, err
+		return TreeEntry{}, err
 	}
 
-	var children []TreeNode
+	var children []TreeEntry
 	var size int64
 	h := sha256.New()
 	for _, entry := range entries {
 		c, err := BuildTree(filepath.Join(path, entry.Name()))
 		if err != nil {
-			return TreeNode{}, err
+			return TreeEntry{}, err
 		}
 		children = append(children, c)
 		size += c.Size
 		h.Write([]byte(c.Hash))
 	}
 
-	return TreeNode{
+	return TreeEntry{
 		Name:     stat.Name(),
 		Hash:     fmt.Sprintf("%x", h.Sum(nil)),
 		Size:     size,
@@ -75,7 +62,7 @@ func BuildTree(path string) (TreeNode, error) {
 	}, nil
 }
 
-func PrintTree(entry TreeNode, level int) {
+func PrintTree(entry TreeEntry, level int) {
 	indent := strings.Repeat(" ", level)
 	fmt.Printf("%s%s %s\n", indent, entry.Hash[:HASH_PRINT_LEN], entry.Name)
 
@@ -98,6 +85,16 @@ func ComputeHash(filepath string) (string, error) {
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
+
+//func Compare(source, target string) (bool, TreeEntry, error) {
+//	if _, err := os.Stat(source); err != nil {
+//		return false, TreeEntry{}, err
+//	}
+//	if _, err := os.Stat(target); err != nil {
+//		return false, TreeEntry{}, err
+//	}
+//	return false, TreeEntry{}, nil
+//}
 
 func main() {
 	tree, _ := BuildTree(os.Args[1])
